@@ -19,17 +19,26 @@ def sigmoid(z: np.ndarray, pochodna: bool=False) -> np.ndarray:
     
     return(z)
     
-def relu(z, pochodna=False):
+def relu(z, pochodna=False, alpha=0.01):
     if not pochodna:
-        return np.maximum(0, z)
+        return np.maximum(z, alpha * z)
     
-    return (z > 0).astype(float) # float zwraca True jako 1 i false jako 0 
+    dz = np.copy(z) 
+    
+    # Warunek 1: Dla z > 0, pochodna wynosi 1
+    dz[z > 0] = 1
+    
+    # Warunek 2: Dla z <= 0, pochodna wynosi alpha (0.01)
+    # W NumPy stosujemy <= aby objąć również punkt 0
+    dz[z <= 0] = alpha
+    
+    return dz
 
 def softmax(z: np.ndarray, pochodna: bool=False) -> np.ndarray:
     '''
     z1,...,zn |-> (exp(z1)/sum(exp(zi)), ..., exp(zn)/sum(exp(zi)))
     '''
-    z = z - np.max(z, axis=1, keepdims=True)
+    #z = z - np.max(z, axis=1, keepdims=True)
     z_exp = np.exp(z)
     s = z_exp / np.sum(z_exp, axis=1, keepdims=True)
     return s
@@ -202,7 +211,10 @@ def main():
     #Y_pred=ann.predict(X_test)
     counter = 0
     for predicted, real in zip(Y_pred,y_real):
-        if predicted == real: counter+=1
+        if predicted == real: 
+            counter+=1
+        else:
+            print("-----")
         print(f'Przewidziane: {predicted}, Prawdziwe: {real}')
     print(counter/len(Y_pred))
 if __name__=="__main__":
